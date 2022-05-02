@@ -60,15 +60,15 @@ void USER_TIM2_Delay_1s(void);
 /* USER CODE BEGIN 0 */
 void TIM2_IRQHandler(void){
 	if( ( TIM2->SR & TIM_SR_UIF ) == 0x01UL ){//		UEV-event causes the interrupt?
-		GPIOC->ODR 	 = 	 GPIOC->ODR ^ GPIO_ODR_ODR13;//	toggle the User LED
-		TIM2->SR	&=	~TIM_SR_UIF;//					UEV-event (overflow) cleared
+		GPIOC->ODR = GPIOC->ODR ^ GPIO_ODR_ODR13;//	toggle the User LED
+		TIM2->SR &= ~TIM_SR_UIF;//			UEV-event (overflow) cleared
 	}
 }
 
 void EXTI1_IRQHandler(void){
 	if( ( EXTI->PR & EXTI_PR_PR1 ) == 0x02UL ){//		EXTI1 line causes the interrupt?
-		GPIOB->ODR 	 = 	 GPIOB->ODR ^ GPIO_ODR_ODR3;//	toggle the PB3 pin
-		EXTI->PR	|=	~EXTI_PR_PR1;//					EXTI line request event cleared
+		GPIOB->ODR = GPIOB->ODR ^ GPIO_ODR_ODR3;//	toggle the PB3 pin
+		EXTI->PR |= EXTI_PR_PR1;//			EXTI line request event cleared
 	}
 }
 /* USER CODE END 0 */
@@ -184,74 +184,74 @@ void USER_RCC_Init(void){
 }
 
 void USER_EXTI_Init(void){
-	EXTI->IMR	|=	 EXTI_IMR_MR1;//	interrupt request line 1 enabled
-	EXTI->RTSR	&=	 EXTI_RTSR_TR1;//	rising trigger disabled
-	EXTI->FTSR	|=	 EXTI_FTSR_TR1;//	falling trigger enabled
+	EXTI->IMR	|=	 EXTI_IMR_MR1;//			interrupt request line 1 enabled
+	EXTI->RTSR	&=	 EXTI_RTSR_TR1;//			rising trigger disabled
+	EXTI->FTSR	|=	 EXTI_FTSR_TR1;//			falling trigger enabled
 }
 
 void USER_GPIO_Init(void){
 	//pin PA1 as input floating (for line 1 interrupt request)
 	GPIOA->CRL	&=	~GPIO_CRL_CNF1_1 & ~GPIO_CRL_MODE1;
 	GPIOA->CRL	|=	 GPIO_CRL_CNF1_0;
-	NVIC_SetPriority(EXTI1_IRQn, 1);//						set 1-level priority
-	NVIC_EnableIRQ(EXTI1_IRQn);//							enable EXTI1 vector handler
+	NVIC_SetPriority(EXTI1_IRQn, 1);//				set 1-level priority
+	NVIC_EnableIRQ(EXTI1_IRQn);//					enable EXTI1 vector handler
 
 	//pin PB0 as input pull-up (to connect the push button)
-	GPIOB->BSRR	 =   GPIO_BSRR_BS0;
+	GPIOB->BSRR	 =	 GPIO_BSRR_BS0;
 	GPIOB->CRL	&=	~GPIO_CRL_CNF0_0 & ~GPIO_CRL_MODE0;
 	GPIOB->CRL	|=	 GPIO_CRL_CNF0_1;
 
-	GPIOB->BSRR	 =   GPIO_BSRR_BS1;//						PB1->1
+	GPIOB->BSRR	 =   	 GPIO_BSRR_BS1;//			PB1->1
 	//pin PB1 as output push-pull, max speed 10MHz (button press event signal without debounce)
 	GPIOB->CRL	&=	~GPIO_CRL_CNF1 & ~GPIO_CRL_MODE1_1;
 	GPIOB->CRL 	|= 	 GPIO_CRL_MODE1_0;
 
-	GPIOB->BSRR	 =   GPIO_BSRR_BR3;//						PB3->0
+	GPIOB->BSRR	 =   	 GPIO_BSRR_BR3;//			PB3->0
 	//pin PB3 as output push-pull, max speed 10MHz (to connect LED2)
 	GPIOB->CRL	&=	~GPIO_CRL_CNF3 & ~GPIO_CRL_MODE3_1;
 	GPIOB->CRL 	|= 	 GPIO_CRL_MODE3_0;
 
-	GPIOC->BSRR	 =   GPIO_BSRR_BS13;//						PC13->1, LED1 OFF
+	GPIOC->BSRR	 =  	 GPIO_BSRR_BS13;//			PC13->1, LED1 OFF
 	//pin PC13 as output push-pull, max speed 10MHz
 	GPIOC->CRH	&=	~GPIO_CRH_CNF13 & ~GPIO_CRH_MODE13_1;
 	GPIOC->CRH 	|= 	 GPIO_CRH_MODE13_0;
 }
 
 void USER_Debounce(void){
-	HAL_Delay( 10 );//					wait 10 ms
-	if( BUTTON == 1 ){//				if not pressed (1), then is noise
+	HAL_Delay( 10 );//						wait 10 ms
+	if( BUTTON == 1 ){//						if not pressed (1), then is noise
 		return;//						get out of the function
 	}
 	//if pressed (0)
-	GPIOB->BSRR	 =   GPIO_BSRR_BR1;//	PB1->0 (signal without debounce)
-	while( BUTTON == 0 ){//				wait until BUTTON is released
-	//									empty while, only to test the condition
+	GPIOB->BSRR = GPIO_BSRR_BR1;//					PB1->0 (signal without debounce)
+	while( BUTTON == 0 ){//						wait until BUTTON is released
+	//								empty while, only to test the condition
 	}
-	HAL_Delay( 10 );//					wait 10 ms
+	HAL_Delay( 10 );//						wait 10 ms
 	//if released (1)
-	GPIOB->BSRR	 =   GPIO_BSRR_BS1;//	PB1->1 (signal without debounce)
+	GPIOB->BSRR = GPIO_BSRR_BS1;//					PB1->1 (signal without debounce)
 }
 
 void USER_TIM2_Delay_1s(void){
 	//Timer 2 slave mode control register
 	TIM2->SMCR	&=	~TIM_SMCR_ECE//				external clock 2 mode disabled
-				&	~TIM_SMCR_SMS;//			slave mode disabled / internal clock
+			&	~TIM_SMCR_SMS;//			slave mode disabled / internal clock
 	//Timer 2 control register 1
 	TIM2->CR1	&=	~TIM_CR1_CMS//				edge-aligned mode (counts up or down depending on DIR)
-				& 	~TIM_CR1_DIR//				upcounter
-				&   ~TIM_CR1_URS//				to generate an overflow UEV-event by software
-				& 	~TIM_CR1_UDIS//				overflow UEV-event enabled
-				& 	~TIM_CR1_CEN;//				counter disabled
+			& 	~TIM_CR1_DIR//				upcounter
+			&   	~TIM_CR1_URS//				to generate an overflow UEV-event by software
+			& 	~TIM_CR1_UDIS//				overflow UEV-event enabled
+			& 	~TIM_CR1_CEN;//				counter disabled
 	TIM2->CR1	|=	 TIM_CR1_ARPE;//			to load ARR value only when an UEV-event is generated
 
-	TIM2->PSC	 =	 1098U;//					prescaler for 1s
-	TIM2->ARR	 =	 65513U;//					maximum count until overflows for 1s
+	TIM2->PSC	 =	 1098U;//				prescaler for 1s
+	TIM2->ARR	 =	 65513U;//				maximum count until overflows for 1s
 	TIM2->EGR	|=	 TIM_EGR_UG;//				generate the UEV-event, reset the counter
 	TIM2->SR	&=	~TIM_SR_UIF;//				overflow UEV-event cleared
 
 	TIM2->DIER	|=	 TIM_DIER_UIE;//			update interrupt enable
-	NVIC_SetPriority(TIM2_IRQn, 0);//			set 0-level (high) priority
-	NVIC_EnableIRQ(TIM2_IRQn);//				enable TIM2 vector handler
+	NVIC_SetPriority(TIM2_IRQn, 0);//				set 0-level (high) priority
+	NVIC_EnableIRQ(TIM2_IRQn);//					enable TIM2 vector handler
 
 	TIM2->CR1	|=	 TIM_CR1_CEN;//				counter enabled
 }
