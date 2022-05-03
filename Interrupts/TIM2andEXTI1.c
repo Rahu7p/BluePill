@@ -4,15 +4,17 @@
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
-  * @attention
+  * This program toggles each second the state of the User LED (LED1), and
+  * toggles each time a button is pressed the state of another LED (LED2).
+  * The one second delay is configured using Timer 2 with Interrupt enabled.
+  * The press of the button generates a falling-edge event. This event is 
+  * requested with the External Interrupt Line 1. 
   *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
+  * PA1  - External Interrupt Line 1
+  * PB0  - Push Button (w/bounce)
+  * PB1  - Clean Signal (push button w/o bounce)
+  * PB3  - LED2
+  * PC13 - User LED (LED1)
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -59,15 +61,15 @@ void USER_TIM2_Delay_1s(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void TIM2_IRQHandler(void){
-	if( ( TIM2->SR & TIM_SR_UIF ) == 0x01UL ){//		UEV-event causes the interrupt?
-		GPIOC->ODR = GPIOC->ODR ^ GPIO_ODR_ODR13;//	toggle the User LED
+	if( ( TIM2->SR & TIM_SR_UIF ) == 0x01UL ){//		UEV-event (overflow) causes the interrupt?
+		GPIOC->ODR = GPIOC->ODR ^ GPIO_ODR_ODR13;//	toggle the User LED (LED1)
 		TIM2->SR &= ~TIM_SR_UIF;//			UEV-event (overflow) cleared
 	}
 }
 
 void EXTI1_IRQHandler(void){
 	if( ( EXTI->PR & EXTI_PR_PR1 ) == 0x02UL ){//		EXTI1 line causes the interrupt?
-		GPIOB->ODR = GPIOB->ODR ^ GPIO_ODR_ODR3;//	toggle the PB3 pin
+		GPIOB->ODR = GPIOB->ODR ^ GPIO_ODR_ODR3;//	toggle the PB3 pin (LED2)
 		EXTI->PR |= EXTI_PR_PR1;//			EXTI line request event cleared
 	}
 }
@@ -177,7 +179,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void USER_RCC_Init(void){
-	//I/O port C clock enable
+	//I/O port A, B and C clock enable
 	RCC->APB2ENR	|=	 RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPAEN;
 	//Timer 2 clock enable
 	RCC->APB1ENR	|=	 RCC_APB1ENR_TIM2EN;
@@ -193,7 +195,7 @@ void USER_GPIO_Init(void){
 	//pin PA1 as input floating (for line 1 interrupt request)
 	GPIOA->CRL	&=	~GPIO_CRL_CNF1_1 & ~GPIO_CRL_MODE1;
 	GPIOA->CRL	|=	 GPIO_CRL_CNF1_0;
-	NVIC_SetPriority(EXTI1_IRQn, 1);//				set 1-level priority
+	NVIC_SetPriority(EXTI1_IRQn, 1);//				set 1-level (low) priority
 	NVIC_EnableIRQ(EXTI1_IRQn);//					enable EXTI1 vector handler
 
 	//pin PB0 as input pull-up (to connect the push button)
@@ -202,7 +204,7 @@ void USER_GPIO_Init(void){
 	GPIOB->CRL	|=	 GPIO_CRL_CNF0_1;
 
 	GPIOB->BSRR	 =   	 GPIO_BSRR_BS1;//			PB1->1
-	//pin PB1 as output push-pull, max speed 10MHz (button press event signal without debounce)
+	//pin PB1 as output push-pull, max speed 10MHz (clean signal, button without bounce)
 	GPIOB->CRL	&=	~GPIO_CRL_CNF1 & ~GPIO_CRL_MODE1_1;
 	GPIOB->CRL 	|= 	 GPIO_CRL_MODE1_0;
 
@@ -212,7 +214,7 @@ void USER_GPIO_Init(void){
 	GPIOB->CRL 	|= 	 GPIO_CRL_MODE3_0;
 
 	GPIOC->BSRR	 =  	 GPIO_BSRR_BS13;//			PC13->1, LED1 OFF
-	//pin PC13 as output push-pull, max speed 10MHz
+	//pin PC13 as output push-pull, max speed 10MHz (LED1)
 	GPIOC->CRH	&=	~GPIO_CRH_CNF13 & ~GPIO_CRH_MODE13_1;
 	GPIOC->CRH 	|= 	 GPIO_CRH_MODE13_0;
 }
@@ -223,13 +225,13 @@ void USER_Debounce(void){
 		return;//						get out of the function
 	}
 	//if pressed (0)
-	GPIOB->BSRR = GPIO_BSRR_BR1;//					PB1->0 (signal without debounce)
+	GPIOB->BSRR = GPIO_BSRR_BR1;//					PB1->0 (signal without bounce)
 	while( BUTTON == 0 ){//						wait until BUTTON is released
 	//								empty while, only to test the condition
 	}
 	HAL_Delay( 10 );//						wait 10 ms
 	//if released (1)
-	GPIOB->BSRR = GPIO_BSRR_BS1;//					PB1->1 (signal without debounce)
+	GPIOB->BSRR = GPIO_BSRR_BS1;//					PB1->1 (signal without bounce)
 }
 
 void USER_TIM2_Delay_1s(void){
@@ -246,7 +248,7 @@ void USER_TIM2_Delay_1s(void){
 
 	TIM2->PSC	 =	 1098U;//				prescaler for 1s
 	TIM2->ARR	 =	 65513U;//				maximum count until overflows for 1s
-	TIM2->EGR	|=	 TIM_EGR_UG;//				generate the UEV-event, reset the counter
+	TIM2->EGR	|=	 TIM_EGR_UG;//				generate the UEV-event, resets the counter
 	TIM2->SR	&=	~TIM_SR_UIF;//				overflow UEV-event cleared
 
 	TIM2->DIER	|=	 TIM_DIER_UIE;//			update interrupt enable
