@@ -4,14 +4,12 @@
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
-  * @attention
+  * This program changes the duty cycle of a PWM signal (1 kHz) to dim a LED.   
+  * Every two seconds a duty cycle is 25% incremented from 0% to 100%. The Timer 2
+  * is configured for the PWM edge-aligned mode (upcounting). The Timer 3 is
+  * configured for the three seconds delay (with polling).
   *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
+  * PA0  - Timer 2 Channel 1 (PWM output signal) / LED
   *
   ******************************************************************************
   */
@@ -178,54 +176,54 @@ void USER_GPIO_Init(void){
 void USER_TIM2_PWM_Init(uint16_t duty){
 	//Timer 2 slave mode control register
 	TIM2->SMCR	&=	~TIM_SMCR_ECE//				external clock 2 mode disabled
-				&	~TIM_SMCR_SMS;//			slave mode disabled / internal clock
+			&	~TIM_SMCR_SMS;//			slave mode disabled / internal clock
 	//Timer 2 control register 1
 	TIM2->CR1	&=	~TIM_CR1_CMS//				edge-aligned mode (depending on DIR)
-				& 	~TIM_CR1_DIR//				upcounter
-				&   ~TIM_CR1_URS//				overflow UEV-event also by software
-				& 	~TIM_CR1_UDIS//				overflow UEV-event enabled
-				& 	~TIM_CR1_CEN;//				counter disabled
+			& 	~TIM_CR1_DIR//				upcounter
+			&   	~TIM_CR1_URS//				overflow UEV-event also by software
+			& 	~TIM_CR1_UDIS//				overflow UEV-event enabled
+			& 	~TIM_CR1_CEN;//				counter disabled
 	TIM2->CR1	|=	 TIM_CR1_ARPE;//			to load ARR value only in UEV-event
 
 	//Timer 2 capture/compare enable register
 	TIM2->CCER	&=	~TIM_CCER_CC1P//			OC1 active high, polarity
-				&	~TIM_CCER_CC1E;//			CC1 channel OFF, OC1 disabled
+			&	~TIM_CCER_CC1E;//			CC1 channel OFF, OC1 disabled
 	//Timer 2 capture/compare mode register
 	TIM2->CCMR1	&=	~TIM_CCMR1_OC1M_0//			PWM mode 1
-				&	~TIM_CCMR1_CC1S;//			CC1 channel as output
+			&	~TIM_CCMR1_CC1S;//			CC1 channel as output
 	TIM2->CCMR1	|=	 TIM_CCMR1_OC1M_2//			PWM mode 1
-				|	 TIM_CCMR1_OC1M_1//			PWM mode 1
-				|	 TIM_CCMR1_OC1PE;//			to load CCR1 value only in UEV-event
+			|	 TIM_CCMR1_OC1M_1//			PWM mode 1
+			|	 TIM_CCMR1_OC1PE;//			to load CCR1 value only in UEV-event
 
-	TIM2->CCR1	 =	 duty;//					duty cycle
-	TIM2->PSC	 =	 1U;//						prescaler for 1kHz
-	TIM2->ARR	 =	 35599U;//					maximum count until match for 1kHz
+	TIM2->CCR1	 =	 duty;//				duty cycle
+	TIM2->PSC	 =	 1U;//					prescaler for 1kHz
+	TIM2->ARR	 =	 35599U;//				maximum count until match for 1kHz
 	TIM2->EGR	|=	 TIM_EGR_UG;//				UEV-event, resets the counter
 	TIM2->SR	&=	~TIM_SR_UIF;//				UEV-event cleared
 	TIM2->CR1	|=	 TIM_CR1_CEN;//				counter enabled
-	while( ( TIM2->SR & TIM_SR_UIF ) == 0 ){//	wait until UEV-event
-	//											empty, only test the condition
+	while( ( TIM2->SR & TIM_SR_UIF ) == 0 ){//			wait until UEV-event
+		//							empty, only test the condition
 	}
 	TIM2->CCER	|=	 TIM_CCER_CC1E;//			OC1 output enabled
 }
 void USER_TIM3_Delay_2s(void){
 	//Timer 2 slave mode control register
 	TIM3->SMCR	&=	~TIM_SMCR_ECE//				external clock 2 mode disabled
-				&	~TIM_SMCR_SMS;//			slave mode disabled / internal clock
+			&	~TIM_SMCR_SMS;//			slave mode disabled / internal clock
 	//Timer 2 control register 1
 	TIM3->CR1	&=	~TIM_CR1_CMS//				edge-aligned mode (depending on DIR)
-				& 	~TIM_CR1_DIR//				upcounter
-				&   ~TIM_CR1_URS//				overflow UEV-event also by software
-				& 	~TIM_CR1_UDIS//				overflow UEV-event enabled
-				& 	~TIM_CR1_CEN;//				counter disabled
+			& 	~TIM_CR1_DIR//				upcounter
+			&   	~TIM_CR1_URS//				overflow UEV-event also by software
+			& 	~TIM_CR1_UDIS//				overflow UEV-event enabled
+			& 	~TIM_CR1_CEN;//				counter disabled
 	TIM3->CR1	|=	 TIM_CR1_ARPE;//			to load ARR value only in UEV-event
 	TIM3->PSC	 =	 1098U * 2;//				prescaler for 2s
-	TIM3->ARR	 =	 65513U;//					maximum count until overflows for 2s
+	TIM3->ARR	 =	 65513U;//				maximum count until overflows for 2s
 	TIM3->EGR	|=	 TIM_EGR_UG;//				UEV-event, reset the counter
 	TIM3->SR	&=	~TIM_SR_UIF;//				overflow UEV-event cleared
 	TIM3->CR1	|=	 TIM_CR1_CEN;//				counter enabled
-	while( ( TIM3->SR & TIM_SR_UIF ) == 0 ){//	wait until overflow UEV-event
-	//											empty, only test the condition
+	while( ( TIM3->SR & TIM_SR_UIF ) == 0 ){//			wait until overflow UEV-event
+	//								empty, only test the condition
 	}
 	TIM3->CR1	&=	~TIM_CR1_CEN;//				counter disabled
 }
