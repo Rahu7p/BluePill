@@ -34,7 +34,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- //osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
 osThreadId TaskHandle1;
 /* USER CODE END PV */
