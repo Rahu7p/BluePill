@@ -51,6 +51,7 @@ static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
 void USER_RCC_Init(void);
 void USER_GPIO_Init(void);
+void USER_USART1_Init(void);
 void senderTask(void const * argument);
 void receiverTask(void const * argument);
 /* USER CODE END PFP */
@@ -203,6 +204,10 @@ void USER_GPIO_Init(void){
 	//pin PA9 (USART1_TX) as alternate function output push-pull, max speed 10MHz
 	GPIOA->CRH	&=	~GPIO_CRH_CNF9_0 & ~GPIO_CRH_MODE9_1;
 	GPIOA->CRH	|=	 GPIO_CRH_CNF9_1 | GPIO_CRH_MODE9_0;
+}
+
+void USER_USART1_Init(void){
+  //complete the configurations for 9600 baud rate, 1 start_8-bit data_1 stop bits
 }
 
 void senderTask(void const * argument)
