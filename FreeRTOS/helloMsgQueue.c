@@ -4,14 +4,10 @@
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
+  * This program creates two Tasks using the CMSIS_V1 API (FreeRTOS). 
+  * A sender Task puts a message in a Queue and the receiver Task gets the
+  * message from the Queue.
+  * The Tasks prints every one second using the UART protocol.
   *
   ******************************************************************************
   */
@@ -199,8 +195,8 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void USER_RCC_Init(void){
-	RCC->APB2ENR	|=	 RCC_APB2ENR_USART1EN// USART 1 clock enable
-					| 	 RCC_APB2ENR_IOPAEN;//	I/O port A clock enable
+	RCC->APB2ENR	|=	 RCC_APB2ENR_USART1EN// 	USART 1 clock enable
+			| 	 RCC_APB2ENR_IOPAEN;//		I/O port A clock enable
 }
 
 void USER_GPIO_Init(void){
