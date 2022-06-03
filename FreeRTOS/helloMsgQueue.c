@@ -222,7 +222,8 @@ void senderTask(void const * argument)
 	  s_event = osMessagePut(MsgQueueHandle, i, 1000);
 	  if( s_event != osOK )
 		  myprintf("Failed to send to Queue\n");
-	  i++;
+	  else
+	  	  i++;
 	  osDelay(1000);
   }
   /* USER CODE END 5 */
