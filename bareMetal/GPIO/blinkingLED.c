@@ -4,14 +4,14 @@
   * @file           : main.c
   * @author         : rahu7p
   ******************************************************************************
-  * @board          : nucleo-f103rb
-  * @mcu            : stm32f103xx
-  * 
-  * 
+  * @board			: blue pill
+  * @mcu			: stm32f103c8t6
   *
-  * This code programas a blinking LED (LD2): on-and-off every second. 
-  * 
-  * 
+  *
+  *
+  * This code programs a blinking LED (PC13): on-and-off every second.
+  *
+  *
   *
   ******************************************************************************
   */
@@ -95,9 +95,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  GPIOA->BSRR = GPIO_BSRR_BS5;//	LD2 ON
+	  GPIOC->BSRR = GPIO_BSRR_BR13;//	LED ON
 	  HAL_Delay(1000);//			1 second delay
-	  GPIOA->BSRR = GPIO_BSRR_BR5;//	LD2 OFF
+	  GPIOC->BSRR = GPIO_BSRR_BS13;//	LED OFF
 	  HAL_Delay(1000);//			1 second delay
     /* USER CODE END WHILE */
 
@@ -118,12 +118,13 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL8;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -151,25 +152,12 @@ void SystemClock_Config(void)
   */
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-
-   /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -177,14 +165,14 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void USER_RCC_Init(void){
-	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;//			I/O port A clock enable
+	RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;//			I/O port C clock enable
 }
 
 void USER_GPIO_Init(void){
-	GPIOA->BSRR = GPIO_BSRR_BR5;//				PA5 -> 0, LD2 OFF
-	//pin A5 as output push-pull max speed 10MHz
-	GPIOA->CRL &= ~GPIO_CRL_CNF5 & ~GPIO_CRL_MODE5_1;
-	GPIOA->CRL |= GPIO_CRL_MODE5_0;
+	GPIOC->BSRR = GPIO_BSRR_BS13;//				PC13 -> 1, LED OFF
+	//pin C13 as output push-pull max speed 10MHz
+	GPIOC->CRH &= ~GPIO_CRH_CNF13 & ~GPIO_CRH_MODE13_1;
+	GPIOC->CRH |= GPIO_CRH_MODE13_0;
 }
 /* USER CODE END 4 */
 
