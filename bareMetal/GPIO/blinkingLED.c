@@ -181,7 +181,7 @@ void USER_RCC_Init(void){
 }
 
 void USER_GPIO_Init(void){
-	GPIOA->BSRR = GPIO_BSRR_BR5;//				PA5 -> 1, LD2 OFF
+	GPIOA->BSRR = GPIO_BSRR_BR5;//				PA5 -> 0, LD2 OFF
 	//pin A5 as output push-pull max speed 10MHz
 	GPIOA->CRL &= ~GPIO_CRL_CNF5 & ~GPIO_CRL_MODE5_1;
 	GPIOA->CRL |= GPIO_CRL_MODE5_0;
